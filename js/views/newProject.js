@@ -39,7 +39,8 @@ const NewProjectView = (() => {
 
           <div class="form-group">
             <label>שם החברה / לקוח <span class="required">*</span></label>
-            <input type="text" id="proj-client" placeholder="לדוגמה: קבוצת ABC" required>
+            <input type="text" id="proj-client" placeholder="לדוגמה: קבוצת ABC" required
+              oninput="NewProjectView.onClientInput(this.value)">
           </div>
         </div>
 
@@ -92,10 +93,40 @@ const NewProjectView = (() => {
     `;
   }
 
+  function onClientInput(val) {
+    clearTimeout(_debounceTimer);
+    if (val.trim().length >= 3) {
+      _debounceTimer = setTimeout(() => searchLogoByCompany(val), 1200);
+    }
+  }
+
   function onDomainInput(val) {
     clearTimeout(_debounceTimer);
     if (val.trim().length >= 4 && val.includes('.')) {
       _debounceTimer = setTimeout(() => searchLogo(), 1000);
+    }
+  }
+
+  async function searchLogoByCompany(company) {
+    if (_searching || !company.trim()) return;
+    _searching = true;
+    const statusEl = document.getElementById('logo-status');
+    statusEl.innerHTML = `<div class="logo-searching"><span class="spinner"></span>מחפש לוגו...</div>`;
+
+    try {
+      const url = await LogoSearch.searchByDomain(company);
+      if (url) {
+        const data = await LogoSearch.toDataUrl(url);
+        setLogo(data);
+        statusEl.innerHTML = '';
+        App.toast('לוגו נמצא!');
+      } else {
+        statusEl.innerHTML = '';
+      }
+    } catch (err) {
+      statusEl.innerHTML = '';
+    } finally {
+      _searching = false;
     }
   }
 
@@ -176,5 +207,5 @@ const NewProjectView = (() => {
     Router.navigate(`/project/${project.id}`);
   }
 
-  return { render, onDomainInput, searchLogo, handleLogoUpload, clearLogo, submit };
+  return { render, onClientInput, onDomainInput, searchLogo, searchLogoByCompany, handleLogoUpload, clearLogo, submit };
 })();

@@ -42,6 +42,14 @@ const PdfMarkup = (() => {
     screen.classList.remove('hidden');
     screen.innerHTML = buildUi();
 
+    // בקשה לFullscreen ו-Landscape mode
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => console.log('Fullscreen failed:', err));
+    }
+    if (window.screen?.orientation) {
+      window.screen.orientation.lock('landscape-primary').catch(err => console.log('Orientation lock failed:', err));
+    }
+
     _pdfCanvas  = document.getElementById('markup-pdf-canvas');
     _drawCanvas = document.getElementById('markup-draw-canvas');
     _ctx        = _drawCanvas.getContext('2d');
@@ -445,6 +453,15 @@ const PdfMarkup = (() => {
     screen.innerHTML = '';
     _pdfDoc = null;
     _onSaveCallback = null;
+    // יציאה מ-Fullscreen ו-Landscape
+    if (document.exitFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+      document.webkitExitFullscreen();
+    }
+    if (window.screen?.orientation?.unlock) {
+      window.screen.orientation.unlock();
+    }
   }
 
   return {

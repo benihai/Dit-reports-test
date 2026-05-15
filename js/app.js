@@ -16,7 +16,11 @@ const App = (() => {
       if (logo) logo.style.opacity = '1';
     }
     if (hTitle) {
-      if (title) { hTitle.textContent = title; hTitle.classList.add('visible'); }
+      if (title) {
+        hTitle.textContent = title;
+        hTitle.classList.add('visible');
+        hTitle.style.textAlign = 'center';
+      }
       else        hTitle.classList.remove('visible');
     }
   }

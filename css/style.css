@@ -35,14 +35,14 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--charcoal);
+  background: #ffffff;
   border-bottom: 3px solid var(--green);
   height: 60px;
   display: flex;
   align-items: center;
   padding: 0 18px;
   gap: 12px;
-  box-shadow: 0 3px 10px rgba(0,0,0,.35);
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
 }
 
 .header-logo {
@@ -52,13 +52,12 @@ body {
   object-fit: contain;
   object-position: right center;
   transition: opacity .2s;
-  filter: brightness(1.1);
 }
 
 .btn-icon {
   background: none;
   border: none;
-  color: rgba(255,255,255,.85);
+  color: var(--charcoal);
   cursor: pointer;
   padding: 6px;
   border-radius: var(--radius-sm);
@@ -68,7 +67,7 @@ body {
   transition: background .15s, color .15s;
   flex-shrink: 0;
 }
-.btn-icon:hover { background: rgba(255,255,255,.12); color: white; }
+.btn-icon:hover { background: var(--green-light); color: var(--green-dark); }
 
 #header-actions {
   display: flex;
@@ -78,8 +77,8 @@ body {
 
 #header-title {
   font-size: .95rem;
-  font-weight: 600;
-  color: rgba(255,255,255,.9);
+  font-weight: 700;
+  color: var(--charcoal);
   flex: 1;
   display: none;
 }

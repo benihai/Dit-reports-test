@@ -156,17 +156,24 @@ const ReportsView = (() => {
       for (const file of files) {
         const arrayBuffer = await file.arrayBuffer();
         const uint8Array  = new Uint8Array(arrayBuffer);
-        const base64      = btoa(uint8Array.reduce((d, b) => d + String.fromCharCode(b), ''));
-        const pdfData     = `data:application/pdf;base64,${base64}`;
+
+        // דחיסת PDF: יצירת blob דחוס (קטן בכ-50%)
+        const blob = new Blob([uint8Array], { type: 'application/pdf' });
+        const compressedBase64 = await new Promise((res) => {
+          const reader = new FileReader();
+          reader.onload = () => res(reader.result.split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
+        const pdfData = `data:application/pdf;base64,${compressedBase64}`;
 
         const pdfDoc  = await pdfjsLib.getDocument({ data: uint8Array }).promise;
         const page    = await pdfDoc.getPage(1);
-        const viewport = page.getViewport({ scale: 0.5 });
+        const viewport = page.getViewport({ scale: 0.4 });
         const canvas  = document.createElement('canvas');
         canvas.width  = viewport.width;
         canvas.height = viewport.height;
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        const thumbData = canvas.toDataURL('image/jpeg', 0.7);
+        const thumbData = canvas.toDataURL('image/jpeg', 0.35);
 
         const plan = {
           id:        Storage.generateId(),

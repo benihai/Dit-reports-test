@@ -1,6 +1,6 @@
 const LogoSearch = (() => {
 
-  function testImage(url, timeout = 5000) {
+  function testImage(url, timeout = 6000) {
     return new Promise(resolve => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -11,33 +11,61 @@ const LogoSearch = (() => {
     });
   }
 
-  function toCandidates(domain) {
-    domain = domain.trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9.\-]/g, '');
-    if (!domain) return [];
+  // המרת שם חברה ל-domain candidates
+  function companyToDomainCandidates(company) {
+    const clean = company.trim()
+      .toLowerCase()
+      .replace(/[א-תיִ-פֿ]+/g, '') // הסרת עברית
+      .replace(/\s+(ltd|inc|corp|llc|group|בעמ|בע"מ|גרופ|מטרו|תכנון|בניין|נדלן|נדל"ן)/gi, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\-]/g, '')
+      .replace(/^-+|-+$/g, '');
 
-    const hasDot = domain.includes('.');
-    const candidates = [];
+    if (!clean) return [];
 
-    if (hasDot) {
-      candidates.push(
+    return [
+      `${clean}.com`,
+      `${clean}.co.il`,
+      `${clean}.org`,
+      `${clean}.net`,
+      `${clean}.il`,
+    ];
+  }
+
+  function toCandidateUrls(query) {
+    const isHebrew = /[א-ת]/.test(query);
+    const urls = [];
+
+    if (!isHebrew && query.includes('.')) {
+      // כבר domain
+      const domain = query.trim().toLowerCase();
+      urls.push(
         `https://logo.clearbit.com/${domain}`,
         `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
       );
     } else {
-      candidates.push(
-        `https://logo.clearbit.com/${domain}.com`,
-        `https://logo.clearbit.com/${domain}.co.il`,
-        `https://logo.clearbit.com/${domain}.org`,
-        `https://logo.clearbit.com/${domain}.net`,
-        `https://www.google.com/s2/favicons?domain=${domain}.com&sz=128`,
-      );
+      // שם חברה - נסה domains מגוזרים
+      const domains = companyToDomainCandidates(query);
+      for (const d of domains) {
+        urls.push(`https://logo.clearbit.com/${d}`);
+      }
+      // Google Favicon עם guess
+      if (domains.length > 0) {
+        urls.push(`https://www.google.com/s2/favicons?domain=${domains[0]}&sz=128`);
+      }
+      // DuckDuckGo icon API
+      const encoded = encodeURIComponent(query.replace(/[א-ת\s]/g, '').trim() || query.split(/\s/)[0]);
+      if (encoded) {
+        urls.push(`https://icons.duckduckgo.com/ip3/${encoded}.com.ico`);
+      }
     }
-    return candidates;
+    return urls;
   }
 
-  async function searchByDomain(domain) {
-    if (!domain?.trim()) return null;
-    const candidates = toCandidates(domain);
+  async function searchByDomain(query) {
+    if (!query?.trim()) return null;
+    const candidates = toCandidateUrls(query);
     for (const url of candidates) {
       const result = await testImage(url);
       if (result) return result;

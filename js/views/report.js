@@ -82,8 +82,9 @@ const ReportView = (() => {
         <tr><td>אתר / שם הפרויקט</td><td>${escHtml(r.siteName || '—')}</td></tr>
         <tr><td>קומות / אזורים</td><td>${escHtml(r.floors || '—')}</td></tr>
         <tr><td>תאריך</td><td>${formatDate(r.date) || '—'}</td></tr>
-        <tr><td>מנהל הסיור</td><td>${escHtml(r.inspector || '—')}</td></tr>
+        <tr><td>מבצע הסיור מטעם DIT</td><td>${escHtml(r.inspector || '—')}</td></tr>
         <tr><td>משתתפים</td><td>${escHtml(r.participants || '—')}</td></tr>
+        <tr><td>סיכום והנחיות להמשך</td><td>${escHtml(r.summary || '—')}</td></tr>
       </table>
     `;
   }
@@ -110,13 +111,17 @@ const ReportView = (() => {
           <input type="date" id="edit-date" value="${escHtml(r.date || '')}">
         </div>
         <div class="form-group">
-          <label>מנהל הסיור</label>
+          <label>מבצע הסיור מטעם DIT</label>
           <input type="text" id="edit-inspector" value="${escHtml(r.inspector || '')}">
         </div>
       </div>
       <div class="form-group">
         <label>משתתפים</label>
         <input type="text" id="edit-participants" placeholder="שמות המשתתפים..." value="${escHtml(r.participants || '')}">
+      </div>
+      <div class="form-group">
+        <label>סיכום והנחיות להמשך</label>
+        <textarea id="edit-summary" rows="3" placeholder="הוסף סיכום כללי והנחיות להמשך...">${escHtml(r.summary || '')}</textarea>
       </div>
       <div class="form-actions" style="margin-top:10px;">
         <button type="button" class="btn btn-outline btn-sm" onclick="ReportView.cancelEditHeader()">ביטול</button>
@@ -146,6 +151,7 @@ const ReportView = (() => {
     report.date         = document.getElementById('edit-date')?.value                 || '';
     report.inspector    = document.getElementById('edit-inspector')?.value.trim()     || '';
     report.participants = document.getElementById('edit-participants')?.value.trim()  || '';
+    report.summary      = document.getElementById('edit-summary')?.value.trim()       || '';
     await Storage.Reports.save(report);
     document.getElementById('header-view-mode').innerHTML = headerViewHtml(report);
     cancelEditHeader();

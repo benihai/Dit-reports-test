@@ -287,16 +287,22 @@ const PdfExport = (() => {
   // SUMMARY / SIGN-OFF BLOCK
   // ─────────────────────────────────────────────────────────────────────────────
   function summaryBlockHtml(report) {
-    if (!report.inspector) return '';
+    if (!report.inspector && !report.summary) return '';
+    const summaryText = report.summary || 'לא הוזן סיכום';
     return `
       <section style="max-width:794px;margin:0 auto;padding:24px 28px 32px;
                       border-top:2px solid #1A1A1A;">
         <h2 style="margin:0 0 14px;font-family:'Heebo',Arial,sans-serif;
                    font-weight:800;font-size:14px;letter-spacing:.12em;
                    text-transform:uppercase;color:#6FA82B;">סיכום והנחיות להמשך</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;
-                    padding:14px 16px;background:#F6FAEC;border-radius:8px;
-                    border:1px solid #BCDE85;">
+        <div style="padding:14px 16px;background:#F6FAEC;border-radius:8px;
+                    border:1px solid #BCDE85;margin-bottom:16px;">
+          <p style="margin:0;font-family:'Heebo',Arial,sans-serif;font-size:14px;
+                    color:#3A3A3A;line-height:1.65;white-space:pre-wrap;">
+            ${esc(summaryText)}
+          </p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <div style="display:flex;gap:10px;align-items:center;">
             ${icon('calendar', 16, '#6FA82B')}
             <div>

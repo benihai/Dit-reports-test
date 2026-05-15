@@ -205,6 +205,16 @@ const NoteModal = (() => {
     const plan = _projectPlans.find(p => p.id === planId);
     if (!plan) return;
 
+    // Fullscreen + Landscape — חייב להיקרא מ-user gesture
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else if (document.documentElement.webkitRequestFullscreen) {
+      document.documentElement.webkitRequestFullscreen();
+    }
+    if (window.screen?.orientation?.lock) {
+      window.screen.orientation.lock('landscape').catch(() => {});
+    }
+
     PdfMarkup.openForNote({
       planId,
       reportId: _reportId,

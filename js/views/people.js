@@ -46,10 +46,10 @@ const PeopleView = (() => {
     const container = document.getElementById('view-container');
 
     const welcomeBanner = `
-      <div class="welcome-banner">
-        <div class="welcome-text">
-          <h1>ברוכים הבאים ל-DIT Report</h1>
-          <p>מערכת ניהול דוחות פיקוח וסיור</p>
+      <div class="welcome-banner" style="text-align:center;">
+        <div class="welcome-text" style="margin:0 auto;">
+          <h1 style="text-align:center;">ברוכים הבאים ל-DIT Report</h1>
+          <p style="text-align:center;">מערכת ניהול דוחות פיקוח וסיור</p>
         </div>
       </div>
     `;
