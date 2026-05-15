@@ -15,6 +15,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Global JS error display — shows any crash in the page instead of silent blank screen -->
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      var vc = document.getElementById('view-container');
+      if (vc) vc.innerHTML =
+        '<div style="padding:24px;color:#dc2626;font-family:monospace;font-size:13px;background:#fef2f2;margin:16px;border-radius:8px;border:1px solid #fca5a5;">' +
+        '<b>שגיאת JavaScript:</b><br>' + msg + '<br><small>' + src + ':' + line + '</small></div>';
+      return false;
+    };
+  </script>
 </head>
 <body>
 
@@ -33,7 +44,9 @@
   </header>
 
   <!-- MAIN CONTENT -->
-  <main class="main-content" id="view-container"></main>
+  <main class="main-content" id="view-container">
+    <div style="padding:40px;text-align:center;color:#888;">טוען...</div>
+  </main>
 
   <!-- MARKUP FULLSCREEN (hidden by default) -->
   <div id="markup-screen" class="hidden"></div>
@@ -55,8 +68,8 @@
   <!-- HIDDEN PDF RENDER AREA -->
   <div id="pdf-template" style="position:fixed;left:-9999px;top:0;width:794px;background:white;"></div>
 
-  <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- SUPABASE — local copy, no CDN dependency -->
+  <script src="js/vendor/supabase.js"></script>
 
   <!-- LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
@@ -66,25 +79,25 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <!-- CONFIG & SUPABASE CLIENT (load first) -->
-  <script src="js/config.js"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="js/config.js?v=4.0"></script>
+  <script src="js/supabase-client.js?v=4.0"></script>
+  <script src="js/auth.js?v=4.0"></script>
 
   <!-- APP SCRIPTS (order matters) -->
-  <script src="js/router.js?v=3.0"></script>
-  <script src="js/storage.js?v=3.0"></script>
-  <script src="js/logoSearch.js?v=2.0"></script>
-  <script src="js/pdfMarkup.js?v=2.0"></script>
-  <script src="js/pdfExport.js?v=2.0"></script>
-  <script src="js/views/login.js?v=1.0"></script>
-  <script src="js/views/viewerReports.js?v=1.0"></script>
-  <script src="js/views/admin.js?v=1.0"></script>
-  <script src="js/views/people.js?v=3.0"></script>
-  <script src="js/views/projects.js?v=2.0"></script>
-  <script src="js/views/newProject.js?v=2.0"></script>
-  <script src="js/views/reports.js?v=2.0"></script>
-  <script src="js/views/noteModal.js?v=2.0"></script>
-  <script src="js/views/report.js?v=3.0"></script>
-  <script src="js/app.js?v=3.0"></script>
+  <script src="js/router.js?v=4.0"></script>
+  <script src="js/storage.js?v=4.0"></script>
+  <script src="js/logoSearch.js?v=4.0"></script>
+  <script src="js/pdfMarkup.js?v=4.0"></script>
+  <script src="js/pdfExport.js?v=4.0"></script>
+  <script src="js/views/login.js?v=4.0"></script>
+  <script src="js/views/viewerReports.js?v=4.0"></script>
+  <script src="js/views/admin.js?v=4.0"></script>
+  <script src="js/views/people.js?v=4.0"></script>
+  <script src="js/views/projects.js?v=4.0"></script>
+  <script src="js/views/newProject.js?v=4.0"></script>
+  <script src="js/views/reports.js?v=4.0"></script>
+  <script src="js/views/noteModal.js?v=4.0"></script>
+  <script src="js/views/report.js?v=4.0"></script>
+  <script src="js/app.js?v=4.0"></script>
 </body>
 </html>
