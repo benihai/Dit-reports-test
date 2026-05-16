@@ -1,9 +1,12 @@
-name: Deploy Staging to Netlify
+name: Deploy Staging to GitHub Pages
 
 on:
   push:
     branches: [ staging ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
@@ -12,14 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v3
+      - name: Deploy to gh-pages (staging subfolder)
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          publish-dir: '.'
-          production-branch: staging
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy from staging branch — ${{ github.sha }}"
-          netlify-config-path: ./netlify.toml
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: 7c8b79f8-f272-438e-b964-35033fa17bc7
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          destination_dir: staging
+          keep_files: true
+          commit_message: "Staging deploy — ${{ github.sha }}"
