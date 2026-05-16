@@ -183,7 +183,7 @@ const App = (() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!_appStarted) window.location.reload();
+        window.location.reload();
       });
     }
 
