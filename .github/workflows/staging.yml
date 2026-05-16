@@ -1,0 +1,25 @@
+name: Deploy Staging to Netlify
+
+on:
+  push:
+    branches: [ staging ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: '.'
+          production-branch: staging
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from staging branch — ${{ github.sha }}"
+          netlify-config-path: ./netlify.toml
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: 7c8b79f8-f272-438e-b964-35033fa17bc7
