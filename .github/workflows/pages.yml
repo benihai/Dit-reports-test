@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main, staging ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -18,17 +18,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Checkout main (production)
+      - name: Checkout
         uses: actions/checkout@v3
-        with:
-          ref: main
-          path: dist
-
-      - name: Checkout staging (staging subfolder)
-        uses: actions/checkout@v3
-        with:
-          ref: staging
-          path: dist/staging
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
@@ -36,7 +27,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: dist
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
