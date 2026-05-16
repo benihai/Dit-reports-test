@@ -198,8 +198,7 @@ body {
   transition: box-shadow .15s, transform .1s;
   box-shadow: var(--shadow);
 }
-.report-card:hover { box-shadow: var(--shadow-md); }
-@media (hover: hover) { .report-card:hover { transform: translateY(-1px); } }
+@media (hover: hover) { .report-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); } }
 
 .report-card-header {
   display: flex;
@@ -504,8 +503,7 @@ textarea { resize: vertical; min-height: 85px; }
   transition: box-shadow .15s, transform .1s;
   box-shadow: var(--shadow);
 }
-.note-card:hover { box-shadow: var(--shadow-md); }
-@media (hover: hover) { .note-card:hover { transform: translateY(-1px); } }
+@media (hover: hover) { .note-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); } }
 .note-card-header {
   display: flex;
   align-items: flex-start;
@@ -773,8 +771,7 @@ textarea { resize: vertical; min-height: 85px; }
   transition: box-shadow .15s, border-color .15s, transform .15s;
   text-align: center;
 }
-.person-card:hover { box-shadow: var(--shadow-md); border-color: var(--green); }
-@media (hover: hover) { .person-card:hover { transform: translateY(-2px); } }
+@media (hover: hover) { .person-card:hover { box-shadow: var(--shadow-md); border-color: var(--green); transform: translateY(-2px); } }
 .person-avatar {
   width: 56px;
   height: 56px;
@@ -1197,8 +1194,7 @@ input[type="password"]:focus {
   align-items: center;
   gap: 12px;
 }
-.viewer-report-card:hover { box-shadow: var(--shadow-md); }
-@media (hover: hover) { .viewer-report-card:hover { transform: translateY(-1px); } }
+@media (hover: hover) { .viewer-report-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); } }
 .viewer-report-logo {
   width: 44px;
   height: 40px;

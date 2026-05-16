@@ -21,6 +21,9 @@ const Router = (() => {
   }
 
   function dispatch(path) {
+    const vc = document.getElementById('view-container');
+    if (vc) vc.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;font-size:.9rem;">טוען...</div>';
+
     for (const route of routes) {
       const match = path.match(route.regex);
       if (match) {
