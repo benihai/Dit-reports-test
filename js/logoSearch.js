@@ -66,7 +66,6 @@ const LogoSearch = (() => {
   function _testImage(url, timeout = 5000) {
     return new Promise(resolve => {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       const timer = setTimeout(() => { img.src = ''; resolve(null); }, timeout);
       img.onload  = () => { clearTimeout(timer); resolve(url); };
       img.onerror = () => { clearTimeout(timer); resolve(null); };
