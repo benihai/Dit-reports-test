@@ -95,7 +95,7 @@ const PdfExport = (() => {
   // ─────────────────────────────────────────────────────────────────────────────
   function reportHeaderHtml(clientLogoSrc, clientName, report) {
     const clientSlot = clientLogoSrc
-      ? `<img src="${clientLogoSrc}" alt="${esc(clientName)}"
+      ? `<img src="${clientLogoSrc}" alt="${esc(clientName)}" data-inline-logo="1"
            style="height:60px;width:auto;max-width:140px;object-fit:contain;display:block;">`
       : `<div style="width:130px;height:68px;
               border:1.5px dashed #BFBFBF;border-radius:6px;
@@ -517,15 +517,35 @@ const PdfExport = (() => {
   // ─────────────────────────────────────────────────────────────────────────────
   // GENERATE PDF  (html2canvas → jsPDF slicing)
   // ─────────────────────────────────────────────────────────────────────────────
+  // Replace the client logo <img> with a <canvas> so html2canvas can render it
+  // without hitting CORS restrictions (canvas elements are rendered natively).
   async function _inlineExternalImages(container) {
-    const imgs = Array.from(container.querySelectorAll('img[src]'));
-    await Promise.all(imgs.map(async img => {
-      const src = img.getAttribute('src');
-      if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
-        const dataUrl = await _toDataUrl(src);
-        if (dataUrl) img.src = dataUrl;
-      }
-    }));
+    const logoImg = container.querySelector('img[data-inline-logo]');
+    if (!logoImg) return;
+
+    const src = logoImg.getAttribute('src') || '';
+    // Try to get a data URL — cache-buster bypasses any cached non-CORS response.
+    const dataUrl = src.startsWith('data:')
+      ? src
+      : await _toDataUrl(src);
+    if (!dataUrl) return;
+
+    await new Promise(resolve => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width  = image.naturalWidth  || 128;
+          c.height = image.naturalHeight || 128;
+          c.style.cssText = logoImg.style.cssText; // preserve layout styles
+          c.getContext('2d').drawImage(image, 0, 0);
+          logoImg.parentNode?.replaceChild(c, logoImg);
+        } catch (_) {}
+        resolve();
+      };
+      image.onerror = () => resolve();
+      image.src = dataUrl;
+    });
   }
 
   async function generate(report, notes, project, prebuiltHtml = null) {
