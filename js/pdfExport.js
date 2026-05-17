@@ -263,11 +263,8 @@ const PdfExport = (() => {
     const hasExtra = extraHtml || markupsHtml || videoHtml;
 
     // ── footer items ──
-    const responsibleHtml = note.responsible
-      ? `<span style="font-family:Arial,sans-serif;font-size:12px;color:#6B6B6B;">באחריות: <b style="color:#1A1A1A;">${esc(note.responsible)}</b></span>`
-      : `<span></span>`;
     const ref = `FIND-${String(_currentReport?.reportNumber||0).padStart(3,'0')}-${num}`;
-    const refHtml = `<span style="font-family:monospace;font-size:12px;color:#6B6B6B;">${ref}</span>`;
+    const refHtml = `<span style="font-family:monospace;font-size:12px;color:#9A9A9A;">${ref}</span>`;
 
     return `
       <article data-finding-card="1"
@@ -277,24 +274,19 @@ const PdfExport = (() => {
 
         <!-- Card head -->
         <div style="display:flex;align-items:center;gap:14px;
-                    padding:14px 18px;border-bottom:1px solid #E6E6E2;">
+                    padding:12px 18px;border-bottom:1px solid #E6E6E2;">
           <span style="font-family:monospace;font-size:11px;font-weight:700;
                        background:#1A1A1A;color:#fff;padding:4px 12px;
                        border-radius:999px;letter-spacing:.04em;
                        white-space:nowrap;flex-shrink:0;">ממצא ${num}</span>
-          <h3 style="margin:0;font-family:'Heebo',Arial,sans-serif;font-weight:800;
-                     font-size:15px;color:#1A1A1A;flex:1;line-height:1.3;
-                     direction:rtl;text-align:right;">
-            ${esc(title)}
-          </h3>
         </div>
 
         <!-- Card body: description + first photo -->
         <div style="display:grid;
                     grid-template-columns:${firstPhoto ? '1.5fr 1fr' : '1fr'};
                     gap:18px;padding:16px 18px;">
-          <div style="font-family:'Heebo',Arial,sans-serif;font-size:13px;
-                      color:#3A3A3A;line-height:1.65;white-space:pre-wrap;
+          <div style="font-family:'Heebo',Arial,sans-serif;font-size:14px;
+                      color:#1A1A1A;line-height:1.7;white-space:pre-wrap;
                       direction:rtl;text-align:right;">
             ${esc(note.description)}
           </div>
@@ -304,10 +296,9 @@ const PdfExport = (() => {
         ${hasExtra ? `<div style="padding:0 18px 14px;">${extraHtml}${markupsHtml}${videoHtml}</div>` : ''}
 
         <!-- Card footer -->
-        <div style="display:flex;justify-content:space-between;align-items:center;
-                    padding:12px 18px;background:#FAFAF8;
+        <div style="display:flex;justify-content:flex-end;align-items:center;
+                    padding:10px 18px;background:#FAFAF8;
                     border-top:1px solid #E6E6E2;">
-          ${responsibleHtml}
           ${refHtml}
         </div>
       </article>`;

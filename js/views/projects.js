@@ -125,17 +125,23 @@ const ProjectsView = (() => {
         </div>
         <div class="form-group">
           <label>לוגו</label>
-          <div style="display:flex;align-items:center;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
             <div id="ep-logo-preview" style="width:56px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#f8f8f8;">
               ${_editLogo
                 ? `<img src="${_editLogo}" style="max-width:54px;max-height:38px;object-fit:contain;">`
                 : `<span style="color:var(--text-muted);font-size:.7rem;">אין</span>`}
             </div>
             <label class="btn btn-outline btn-sm" style="cursor:pointer;">
-              החלף לוגו
+              העלה לוגו
               <input type="file" accept="image/*" style="display:none;" onchange="ProjectsView._onEditLogo(event,'${id}')">
             </label>
             ${_editLogo ? `<button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="ProjectsView._clearEditLogo('${id}')">הסר</button>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="ep-domain" placeholder="לוגו לפי דומיין (למשל: apple.com)"
+                   value="${escHtml(project.domain || '')}"
+                   style="flex:1;font-size:.85rem;">
+            <button class="btn btn-outline btn-sm" onclick="ProjectsView._searchLogoByDomain('${id}')">חפש לוגו</button>
           </div>
         </div>
 
@@ -171,14 +177,35 @@ const ProjectsView = (() => {
     if (preview) preview.innerHTML = `<span style="color:var(--text-muted);font-size:.7rem;">אין</span>`;
   }
 
+  async function _searchLogoByDomain(projectId) {
+    const domain = document.getElementById('ep-domain')?.value.trim();
+    if (!domain) { App.toast('הזן דומיין לחיפוש'); return; }
+    App.showLoading('מחפש לוגו...');
+    try {
+      const url = await LogoSearch.searchByDomain(domain);
+      if (!url) { App.toast('לא נמצא לוגו לדומיין זה'); return; }
+      const dataUrl = await LogoSearch.toDataUrl(url);
+      _pendingLogo = dataUrl;
+      const preview = document.getElementById('ep-logo-preview');
+      if (preview) preview.innerHTML = `<img src="${dataUrl}" style="max-width:54px;max-height:38px;object-fit:contain;">`;
+      App.toast('לוגו נמצא');
+    } catch (err) {
+      App.toast('שגיאה בחיפוש לוגו');
+    } finally {
+      App.hideLoading();
+    }
+  }
+
   async function _saveEdit(projectId) {
     const name   = document.getElementById('ep-name')?.value.trim();
     const client = document.getElementById('ep-client')?.value.trim();
+    const domain = document.getElementById('ep-domain')?.value.trim();
     if (!name) { App.toast('נא להזין שם פרויקט'); return; }
 
     const project = await Storage.Projects.get(projectId);
     project.name       = name;
     project.clientName = client || '';
+    project.domain     = domain || '';
     if (_pendingLogo !== null) project.logoData = _pendingLogo;
 
     App.showLoading('שומר...');
@@ -209,5 +236,5 @@ const ProjectsView = (() => {
     });
   }
 
-  return { render, editProject, _onEditLogo, _clearEditLogo, _saveEdit, deleteProject };
+  return { render, editProject, _onEditLogo, _clearEditLogo, _searchLogoByDomain, _saveEdit, deleteProject };
 })();
