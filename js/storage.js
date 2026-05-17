@@ -106,6 +106,45 @@ const Storage = (() => {
     return { id: p.id, project_id: p.projectId, name: p.name || null, pdf_data: pdfVal, thumb_data: p.thumbData || null, created_at: p.createdAt };
   }
 
+  // ── Pending writes queue (offline-first sync) ───────────────────────────
+  const _pending = {};
+  let _syncing = false;
+
+  function _enqueuePendingWrite(type, data) {
+    _pending[`${type}_${data.id}`] = { type, data };
+    localforage.setItem('dc:pending', _pending).catch(() => {});
+  }
+
+  function _dequeuePendingWrite(key) {
+    delete _pending[key];
+    localforage.setItem('dc:pending', _pending).catch(() => {});
+  }
+
+  async function _flushPendingWrites() {
+    if (_syncing || !navigator.onLine) return;
+    _syncing = true;
+    for (const [key, item] of Object.entries(_pending)) {
+      try {
+        if (item.type === 'note') {
+          const { error } = await _supabase.from('notes').upsert(noteToRow(item.data));
+          if (!error) _dequeuePendingWrite(key);
+        } else if (item.type === 'report') {
+          const { error } = await _supabase.from('reports').upsert(reportToRow(item.data));
+          if (!error) _dequeuePendingWrite(key);
+        }
+      } catch (_) {}
+    }
+    _syncing = false;
+  }
+
+  // Load persisted pending writes on startup and flush if online
+  localforage.getItem('dc:pending').then(saved => {
+    if (saved && typeof saved === 'object') Object.assign(_pending, saved);
+    _flushPendingWrites();
+  }).catch(() => {});
+
+  window.addEventListener('online', () => _flushPendingWrites());
+
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
   }
@@ -193,10 +232,21 @@ const Storage = (() => {
       });
     },
     async save(report) {
-      _mClear(`reports_${report.projectId}`, `report_${report.id}`);
-      const { data, error } = await _supabase.from('reports').upsert(reportToRow(report)).select().single();
-      throwIf(error);
-      return mapReport(data);
+      // Optimistic local-first
+      const listKey = `reports_${report.projectId}`;
+      const itemKey = `report_${report.id}`;
+      const cachedList = _mGet(listKey) || await _lfGet(listKey) || [];
+      const updatedList = cachedList.some(r => r.id === report.id)
+        ? cachedList.map(r => r.id === report.id ? report : r)
+        : [...cachedList, report];
+      _mSet(listKey, updatedList);
+      _mSet(itemKey, report);
+      _lfSet(listKey, updatedList);
+      _lfSet(itemKey, report);
+      // Sync to Supabase in background
+      _enqueuePendingWrite('report', report);
+      _flushPendingWrites();
+      return report;
     },
     async delete(id) {
       _mClear(`reports_`, `report_${id}`);
@@ -204,8 +254,21 @@ const Storage = (() => {
       throwIf(error);
     },
     async getNextNumber(projectId) {
-      const { data } = await _supabase.from('reports').select('report_number').eq('project_id', projectId).order('report_number', { ascending: false }).limit(1);
-      return ((data?.[0]?.report_number) || 0) + 1;
+      let max = 0;
+      // Check local cache (includes offline-created reports)
+      const cached = _mGet(`reports_${projectId}`) || await _lfGet(`reports_${projectId}`) || [];
+      cached.forEach(r => { max = Math.max(max, r.reportNumber || 0); });
+      // Also check pending writes
+      Object.values(_pending).filter(w => w.type === 'report' && w.data.projectId === projectId)
+        .forEach(w => { max = Math.max(max, w.data.reportNumber || 0); });
+      if (navigator.onLine) {
+        try {
+          const { data } = await _supabase.from('reports').select('report_number')
+            .eq('project_id', projectId).order('report_number', { ascending: false }).limit(1);
+          max = Math.max(max, (data?.[0]?.report_number) || 0);
+        } catch (_) {}
+      }
+      return max + 1;
     },
     async getPermitted() {
       const { data, error } = await _supabase
@@ -237,17 +300,18 @@ const Storage = (() => {
       return mapNote(data);
     },
     async save(note) {
-      _mClear(`notes_${note.reportId}`);
-      const { data, error } = await _supabase.from('notes').upsert(noteToRow(note)).select().single();
-      throwIf(error);
-      const result = mapNote(data);
-      // Refresh localforage cache in background
-      _lfGet(`notes_${note.reportId}`).then(cached => {
-        if (cached) {
-          _lfSet(`notes_${note.reportId}`, cached.map(n => n.id === result.id ? result : n));
-        }
-      });
-      return result;
+      // Optimistic local-first: update memory + localforage immediately
+      const key = `notes_${note.reportId}`;
+      const cached = _mGet(key) || await _lfGet(key) || [];
+      const updated = cached.some(n => n.id === note.id)
+        ? cached.map(n => n.id === note.id ? note : n)
+        : [...cached, note];
+      _mSet(key, updated);
+      _lfSet(key, updated);
+      // Sync to Supabase in background
+      _enqueuePendingWrite('note', note);
+      _flushPendingWrites();
+      return note;
     },
     async delete(id) {
       // We don't know reportId here, so clear all note caches
