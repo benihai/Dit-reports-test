@@ -127,7 +127,7 @@ const PdfExport = (() => {
             </div>
             <div style="font-family:Arial,sans-serif;font-size:13px;
                         color:#6B6B6B;margin-top:4px;">
-              DIT — Design It Right · ניהול ופיקוח בנייה
+              DIT — Design It Right · יעוץ, תכנון וניהול פרוייקטים טכנולוגים
             </div>
             <div style="font-family:monospace;font-size:11px;color:#6B6B6B;
                         letter-spacing:.06em;margin-top:6px;">
@@ -148,12 +148,13 @@ const PdfExport = (() => {
   // ─────────────────────────────────────────────────────────────────────────────
   function metadataBlockHtml(report, project) {
     const items = [
-      { ic:'tag',      k:'שם הפרויקט',     v: project?.name       || '—' },
-      { ic:'map',      k:'קומות / אזורים', v: report.floors       || '—' },
-      { ic:'calendar', k:'תאריך הסיור',    v: formatDate(report.date) || '—' },
-      { ic:'user',     k:'מפקח מטעם DIT',  v: report.inspector    || '—' },
-      { ic:'users',    k:'משתתפים נוספים', v: report.participants || '—' },
-      { ic:'check',    k:'מטרת הסיור',     v: report.description  || '—' },
+      { ic:'tag',      k:'שם הפרויקט',        v: project?.name         || '—' },
+      { ic:'users',    k:'חברת ניהול פרויקט', v: project?.clientName   || '—' },
+      { ic:'map',      k:'קומות / אזורים',   v: report.floors         || '—' },
+      { ic:'calendar', k:'תאריך הסיור',       v: formatDate(report.date) || '—' },
+      { ic:'user',     k:'מפקח מטעם DIT',     v: report.inspector      || '—' },
+      { ic:'users',    k:'משתתפים נוספים',    v: report.participants   || '—' },
+      { ic:'check',    k:'מטרת הסיור',        v: report.description    || '—' },
     ];
 
     const cells = items.map(it => `
