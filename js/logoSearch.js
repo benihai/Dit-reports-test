@@ -86,6 +86,22 @@ const LogoSearch = (() => {
   }
 
   async function toDataUrl(imgUrl) {
+    if (!imgUrl) return null;
+    if (imgUrl.startsWith('data:')) return imgUrl;
+    // Try fetch first — works for services with Access-Control-Allow-Origin: *
+    try {
+      const resp = await fetch(imgUrl, { mode: 'cors' });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        return await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload  = () => resolve(reader.result);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch (_) {}
+    // Canvas fallback
     return new Promise(resolve => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -96,11 +112,9 @@ const LogoSearch = (() => {
           canvas.height = img.naturalHeight || 128;
           canvas.getContext('2d').drawImage(img, 0, 0);
           resolve(canvas.toDataURL('image/png'));
-        } catch (_) {
-          resolve(imgUrl);
-        }
+        } catch (_) { resolve(null); }
       };
-      img.onerror = () => resolve(imgUrl);
+      img.onerror = () => resolve(null);
       img.src = imgUrl + (imgUrl.includes('?') ? '&' : '?') + '_cors=' + Date.now();
     });
   }

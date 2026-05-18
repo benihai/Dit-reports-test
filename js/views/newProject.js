@@ -122,9 +122,13 @@ const NewProjectView = (() => {
       if (!url && company) url = await LogoSearch.searchByName(company);
       if (url) {
         const data = await LogoSearch.toDataUrl(url);
-        setLogo(data);
-        if (statusEl) statusEl.innerHTML = '';
-        App.toast('לוגו נמצא!');
+        if (data) {
+          setLogo(data);
+          if (statusEl) statusEl.innerHTML = '';
+          App.toast('לוגו נמצא!');
+        } else {
+          if (statusEl) statusEl.innerHTML = '';
+        }
       } else {
         if (statusEl) statusEl.innerHTML = '';
       }
@@ -153,8 +157,12 @@ const NewProjectView = (() => {
       if (!url && company) url = await LogoSearch.searchByName(company);
       if (url) {
         const data = await LogoSearch.toDataUrl(url);
-        setLogo(data);
-        App.toast('לוגו נמצא!');
+        if (data) {
+          setLogo(data);
+          App.toast('לוגו נמצא!');
+        } else {
+          App.toast('לא ניתן לייבא לוגו — אנא העלה את קובץ הלוגו ידנית');
+        }
       } else {
         App.toast('לא נמצא לוגו — הזן דומיין אתר החברה (לדוגמה: abc.co.il) או העלה ידנית');
       }

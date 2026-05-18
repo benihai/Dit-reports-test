@@ -370,8 +370,22 @@ const PdfExport = (() => {
   // We need reportNumber accessible inside findingCardHtml, so keep a module ref
   let _currentReport = null;
 
-  function _toDataUrl(url) {
-    if (!url || url.startsWith('data:')) return Promise.resolve(url);
+  async function _toDataUrl(url) {
+    if (!url || url.startsWith('data:')) return url;
+    // 1. Try fetch — works when server sends Access-Control-Allow-Origin: *
+    try {
+      const resp = await fetch(url, { mode: 'cors' });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        return await new Promise(resolve => {
+          const reader = new FileReader();
+          reader.onload  = () => resolve(reader.result);
+          reader.onerror = () => resolve('');
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch (_) {}
+    // 2. Canvas fallback — works if browser's cache-buster avoids the tainted-canvas problem
     return new Promise(resolve => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -385,8 +399,6 @@ const PdfExport = (() => {
         } catch (_) { resolve(''); }
       };
       img.onerror = () => resolve('');
-      // Cache-buster forces a fresh CORS-enabled request, bypassing any
-      // cached non-CORS response left by the earlier image-test load.
       img.src = url + (url.includes('?') ? '&' : '?') + '_cors=' + Date.now();
     });
   }
