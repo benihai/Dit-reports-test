@@ -13,9 +13,14 @@ const PdfExport = (() => {
   }
 
   async function _ensureLibs() {
-    if (typeof QRCode === 'undefined') {
-      await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-    }
+    await Promise.all([
+      typeof html2canvas !== 'undefined' ? Promise.resolve()
+        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+      typeof window.jspdf !== 'undefined' ? Promise.resolve()
+        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+      typeof QRCode !== 'undefined' ? Promise.resolve()
+        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'),
+    ]);
   }
 
   // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -507,53 +512,72 @@ const PdfExport = (() => {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // GENERATE PDF  — real PDF via browser print dialog (selectable text)
+  // AVOID PAGE BREAKS — push cards that straddle a page boundary to next page
   // ─────────────────────────────────────────────────────────────────────────────
-  const _PRINT_CSS = `
-    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap');
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: #fff; }
-    @page { size: A4; margin: 10mm 12mm; }
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      [data-finding-card] { page-break-inside: avoid; break-inside: avoid; }
-      footer { position: running(footer); }
+  function _avoidPageBreaks(container) {
+    const PAGE_H = Math.round(297 * 794 / 210); // A4 height in 794px-wide px ≈ 1123
+    const cards = Array.from(container.querySelectorAll('[data-finding-card]'));
+    for (const card of cards) {
+      void container.offsetHeight;
+      const cRect = container.getBoundingClientRect();
+      const r     = card.getBoundingClientRect();
+      const top   = r.top  - cRect.top;
+      const bot   = r.bottom - cRect.top;
+      const pStart = Math.floor(top / PAGE_H);
+      const pEnd   = Math.floor((bot - 1) / PAGE_H);
+      if (pStart !== pEnd && r.height < PAGE_H) {
+        const spacer = document.createElement('div');
+        spacer.style.height = `${(pStart + 1) * PAGE_H - top}px`;
+        card.parentNode.insertBefore(spacer, card);
+      }
     }
-    img { max-width: 100%; }
-    figure { margin: 0; }
-  `;
+  }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // GENERATE PDF  — html2canvas → jsPDF direct download (no print dialog)
+  // ─────────────────────────────────────────────────────────────────────────────
   async function generate(report, notes, project) {
     await _ensureLibs();
     const html = await buildHtml(report, notes, project);
-    const fname = `דוח-${report.reportNumber}-${(project?.name || 'DIT').replace(/\s+/g,'-')}`;
 
-    const win = window.open('', '_blank');
-    if (!win) { App.toast('אפשר פתיחת חלון קופץ בדפדפן'); return; }
+    const container = document.getElementById('pdf-template');
+    container.innerHTML = html;
+    await waitForImages(container);
+    _avoidPageBreaks(container);
+    await document.fonts.ready.catch(() => {});
 
-    win.document.write(`<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-  <meta charset="utf-8">
-  <title>${fname}</title>
-  <style>${_PRINT_CSS}</style>
-</head>
-<body>${html}</body>
-</html>`);
-    win.document.close();
-
-    // Wait for fonts + images before triggering print
-    await new Promise(resolve => {
-      win.addEventListener('load', resolve, { once: true });
-      // Safety timeout in case load already fired
-      setTimeout(resolve, 3000);
+    const canvas = await html2canvas(container, {
+      scale:           2,
+      useCORS:         true,
+      backgroundColor: '#ffffff',
+      logging:         false,
     });
-    await win.document.fonts.ready.catch(() => {});
 
-    win.focus();
-    win.print();
-    // Close helper window after user dismisses print dialog
-    win.addEventListener('afterprint', () => win.close());
+    const { jsPDF } = window.jspdf;
+    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const ratio = pageW / canvas.width;
+    let rendered = 0, page = 0;
+
+    while (rendered < canvas.height) {
+      if (page > 0) pdf.addPage();
+      const sliceH = Math.min(pageH / ratio, canvas.height - rendered);
+      const slice  = document.createElement('canvas');
+      slice.width  = canvas.width;
+      slice.height = Math.ceil(sliceH);
+      slice.getContext('2d').drawImage(
+        canvas, 0, rendered, canvas.width, sliceH,
+        0, 0, canvas.width, sliceH
+      );
+      pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, pageW, sliceH * ratio);
+      rendered += sliceH;
+      page++;
+    }
+
+    container.innerHTML = '';
+    const fname = `דוח-${report.reportNumber}-${(project?.name || 'DIT').replace(/\s+/g,'-')}.pdf`;
+    pdf.save(fname);
   }
 
   return { generate, preview, downloadFromPreview };
