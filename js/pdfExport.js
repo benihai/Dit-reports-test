@@ -13,14 +13,9 @@ const PdfExport = (() => {
   }
 
   async function _ensureLibs() {
-    await Promise.all([
-      typeof html2canvas !== 'undefined' ? Promise.resolve()
-        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-      typeof window.jspdf !== 'undefined' ? Promise.resolve()
-        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
-      typeof QRCode !== 'undefined' ? Promise.resolve()
-        : _loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'),
-    ]);
+    if (typeof QRCode === 'undefined') {
+      await _loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+    }
   }
 
   // ── HELPERS ──────────────────────────────────────────────────────────────────
@@ -478,7 +473,7 @@ const PdfExport = (() => {
           <button onclick="PdfExport.downloadFromPreview()"
             style="background:#8CC63F;color:#fff;border:none;border-radius:5px;
             padding:8px 20px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.88rem;">
-            ⬇ הורד PDF
+            ⬇ שמור PDF
           </button>
           <button onclick="document.getElementById('pdf-preview-overlay').remove()"
             style="background:rgba(255,255,255,.12);color:#fff;
@@ -512,72 +507,57 @@ const PdfExport = (() => {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // AVOID PAGE BREAKS — push cards that straddle a page boundary to next page
+  // GENERATE PDF  — window.print() → real PDF with selectable text
+  // Browser headers/footers are suppressed via @page { margin:0 } in the CSS.
+  // User clicks "Save as PDF" in the print dialog → direct download.
   // ─────────────────────────────────────────────────────────────────────────────
-  function _avoidPageBreaks(container) {
-    const PAGE_H = Math.round(297 * 794 / 210); // A4 height in 794px-wide px ≈ 1123
-    const cards = Array.from(container.querySelectorAll('[data-finding-card]'));
-    for (const card of cards) {
-      void container.offsetHeight;
-      const cRect = container.getBoundingClientRect();
-      const r     = card.getBoundingClientRect();
-      const top   = r.top  - cRect.top;
-      const bot   = r.bottom - cRect.top;
-      const pStart = Math.floor(top / PAGE_H);
-      const pEnd   = Math.floor((bot - 1) / PAGE_H);
-      if (pStart !== pEnd && r.height < PAGE_H) {
-        const spacer = document.createElement('div');
-        spacer.style.height = `${(pStart + 1) * PAGE_H - top}px`;
-        card.parentNode.insertBefore(spacer, card);
-      }
-    }
-  }
+  const _PRINT_CSS = `
+    @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap');
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #fff; }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // GENERATE PDF  — html2canvas → jsPDF direct download (no print dialog)
-  // ─────────────────────────────────────────────────────────────────────────────
+    /* margin:0 removes the browser's URL/date/page-number headers and footers */
+    @page { size: A4 portrait; margin: 0; }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      /* content padding compensates for zero page margin */
+      .dit-report { padding: 0 !important; }
+      [data-finding-card] { page-break-inside: avoid; break-inside: avoid; }
+    }
+    img { max-width: 100%; }
+    figure { margin: 0; }
+  `;
+
   async function generate(report, notes, project) {
     await _ensureLibs();
     const html = await buildHtml(report, notes, project);
+    const fname = `דוח-${report.reportNumber}-${(project?.name || 'DIT').replace(/\s+/g,'-')}`;
 
-    const container = document.getElementById('pdf-template');
-    container.innerHTML = html;
-    await waitForImages(container);
-    _avoidPageBreaks(container);
-    await document.fonts.ready.catch(() => {});
+    const win = window.open('', '_blank');
+    if (!win) { App.toast('יש לאפשר חלון קופץ בדפדפן'); return; }
 
-    const canvas = await html2canvas(container, {
-      scale:           2,
-      useCORS:         true,
-      backgroundColor: '#ffffff',
-      logging:         false,
+    win.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="utf-8">
+  <title>${fname}</title>
+  <style>${_PRINT_CSS}</style>
+</head>
+<body>${html}</body>
+</html>`);
+    win.document.close();
+
+    await new Promise(resolve => {
+      if (win.document.readyState === 'complete') { resolve(); return; }
+      win.addEventListener('load', resolve, { once: true });
+      setTimeout(resolve, 4000);
     });
+    await win.document.fonts.ready.catch(() => {});
 
-    const { jsPDF } = window.jspdf;
-    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const ratio = pageW / canvas.width;
-    let rendered = 0, page = 0;
-
-    while (rendered < canvas.height) {
-      if (page > 0) pdf.addPage();
-      const sliceH = Math.min(pageH / ratio, canvas.height - rendered);
-      const slice  = document.createElement('canvas');
-      slice.width  = canvas.width;
-      slice.height = Math.ceil(sliceH);
-      slice.getContext('2d').drawImage(
-        canvas, 0, rendered, canvas.width, sliceH,
-        0, 0, canvas.width, sliceH
-      );
-      pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, pageW, sliceH * ratio);
-      rendered += sliceH;
-      page++;
-    }
-
-    container.innerHTML = '';
-    const fname = `דוח-${report.reportNumber}-${(project?.name || 'DIT').replace(/\s+/g,'-')}.pdf`;
-    pdf.save(fname);
+    win.focus();
+    win.print();
+    win.addEventListener('afterprint', () => win.close());
   }
 
   return { generate, preview, downloadFromPreview };
