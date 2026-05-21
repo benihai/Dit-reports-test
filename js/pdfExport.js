@@ -144,7 +144,7 @@ const PdfExport = (() => {
   function metadataBlockHtml(report, project) {
     const items = [
       { ic:'tag',      k:'שם הפרויקט',        v: project?.name         || '—' },
-      { ic:'users',    k:'חברת ניהול פרויקט', v: project?.clientName   || '—' },
+      { ic:'users',    k:'חברת פיקוח',         v: project?.clientName   || '—' },
       { ic:'map',      k:'קומות / אזורים',   v: report.floors         || '—' },
       { ic:'calendar', k:'תאריך הסיור',       v: formatDate(report.date) || '—' },
       { ic:'user',     k:'מפקח מטעם DIT',     v: report.inspector      || '—' },
