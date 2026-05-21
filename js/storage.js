@@ -199,12 +199,7 @@ const Storage = (() => {
     async save(project) {
       _mClear(`projects_${project.personId}`, `project_${project.id}`);
       const row = projectToRow(project);
-      // If client_name column not yet migrated, try without it
-      let { data, error } = await _supabase.from('projects').upsert(row).select().single();
-      if (error?.message?.includes('client_name')) {
-        const { client_name: _, ...rowWithout } = row;
-        ({ data, error } = await _supabase.from('projects').upsert(rowWithout).select().single());
-      }
+      const { data, error } = await _supabase.from('projects').upsert(row).select().single();
       throwIf(error);
       return mapProject(data);
     },
