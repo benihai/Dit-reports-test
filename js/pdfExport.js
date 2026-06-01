@@ -247,39 +247,28 @@ const PdfExport = (() => {
       <article data-finding-card="1"
                style="background:#fff;border:1px solid #E6E6E2;border-radius:8px;
                       box-shadow:0 1px 2px rgba(26,26,26,.06);overflow:hidden;
-                      margin-bottom:24px;page-break-inside:avoid;">
+                      margin-bottom:16px;page-break-inside:avoid;">
 
-        <!-- Card head: number + location details -->
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-                    padding:12px 18px;border-bottom:1px solid #E6E6E2;background:#FAFAF8;">
-          <span style="font-family:monospace;font-size:12px;font-weight:700;
-                       background:#1A1A1A;color:#fff;padding:4px 14px;
-                       border-radius:999px;letter-spacing:.04em;
-                       white-space:nowrap;flex-shrink:0;">ממצא ${num}</span>
-          ${note.floor ? `<span style="display:flex;align-items:center;gap:5px;
-                                      font-size:13px;font-weight:600;color:#3A3A3A;">
-            ${icon('map', 14, '#6B6B6B')} ${esc(note.floor)}</span>` : ''}
-          ${note.area  ? `<span style="display:flex;align-items:center;gap:5px;
-                                      font-size:13px;font-weight:600;color:#3A3A3A;">
-            ${icon('tag', 14, '#6B6B6B')} ${esc(note.area)}</span>` : ''}
-          <span style="margin-right:auto;font-family:monospace;font-size:11px;
-                       color:#9A9A9A;">${ref}</span>
+        <!-- Card head: right=badge+location, left=ref -->
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    padding:10px 16px;border-bottom:1px solid #E6E6E2;background:#FAFAF8;
+                    direction:rtl;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:nowrap;overflow:hidden;">
+            <span style="font-family:monospace;font-size:11px;font-weight:700;
+                         background:#1A1A1A;color:#fff;padding:3px 12px;
+                         border-radius:999px;white-space:nowrap;flex-shrink:0;">ממצא ${num}</span>
+            ${note.floor ? `<span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#3A3A3A;white-space:nowrap;">${icon('map',13,'#6B6B6B')} ${esc(note.floor)}</span>` : ''}
+            ${note.area  ? `<span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#3A3A3A;white-space:nowrap;">${icon('tag',13,'#6B6B6B')} ${esc(note.area)}</span>` : ''}
+          </div>
+          <span style="font-family:monospace;font-size:10px;color:#AEAEAD;white-space:nowrap;flex-shrink:0;">${ref}</span>
         </div>
 
-        <!-- Card body: description -->
-        <div style="padding:14px 18px;">
-          <div style="font-family:'Heebo',Arial,sans-serif;font-size:14px;
-                      color:#1A1A1A;line-height:1.75;white-space:pre-wrap;
-                      direction:rtl;text-align:right;">
-            ${esc(note.description)}
-          </div>
-          ${note.responsible ? `
-          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
-            ${icon('user', 14, '#6B6B6B')}
-            <span style="font-size:11px;color:#6B6B6B;font-weight:600;
-                         letter-spacing:.06em;text-transform:uppercase;">אחריות:</span>
-            <span style="font-size:13px;color:#1A1A1A;font-weight:600;">${esc(note.responsible)}</span>
-          </div>` : ''}
+        <!-- Card body -->
+        <div style="padding:12px 16px;direction:rtl;text-align:right;">
+          <div style="font-family:'Heebo',Arial,sans-serif;font-size:13px;
+                      color:#1A1A1A;line-height:1.7;white-space:pre-line;">
+${esc(note.description).trim()}</div>
+          ${note.responsible ? `<div style="margin-top:8px;font-size:12px;color:#3A3A3A;text-align:right;">${icon('user',13,'#9A9A9A')} <b>אחריות:</b> ${esc(note.responsible)}</div>` : ''}
           ${imagesHtml}${markupsHtml}${videoHtml}
         </div>
       </article>`;
