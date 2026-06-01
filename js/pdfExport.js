@@ -273,6 +273,13 @@ const PdfExport = (() => {
                       direction:rtl;text-align:right;">
             ${esc(note.description)}
           </div>
+          ${note.responsible ? `
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+            ${icon('user', 14, '#6B6B6B')}
+            <span style="font-size:11px;color:#6B6B6B;font-weight:600;
+                         letter-spacing:.06em;text-transform:uppercase;">אחריות:</span>
+            <span style="font-size:13px;color:#1A1A1A;font-weight:600;">${esc(note.responsible)}</span>
+          </div>` : ''}
           ${imagesHtml}${markupsHtml}${videoHtml}
         </div>
       </article>`;
