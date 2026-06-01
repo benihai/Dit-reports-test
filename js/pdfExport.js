@@ -265,10 +265,9 @@ const PdfExport = (() => {
 
         <!-- Card body -->
         <div style="padding:12px 16px;direction:rtl;text-align:right;">
-          <div style="font-family:'Heebo',Arial,sans-serif;font-size:13px;
-                      color:#1A1A1A;line-height:1.7;white-space:pre-line;">
-${esc(note.description).trim()}</div>
-          ${note.responsible ? `<div style="margin-top:8px;font-size:12px;color:#3A3A3A;text-align:right;">${icon('user',13,'#9A9A9A')} <b>אחריות:</b> ${esc(note.responsible)}</div>` : ''}
+          <div style="font-family:'Heebo',Arial,sans-serif;font-size:13px;color:#1A1A1A;
+                      line-height:1.7;white-space:pre-line;direction:rtl;text-align:right;">${esc(note.description).trim()}</div>
+          ${note.responsible ? `<div style="margin-top:8px;font-size:12px;color:#3A3A3A;direction:rtl;text-align:right;">${icon('user',13,'#9A9A9A')} <b>אחריות:</b> ${esc(note.responsible)}</div>` : ''}
           ${imagesHtml}${markupsHtml}${videoHtml}
         </div>
       </article>`;
@@ -510,7 +509,7 @@ ${esc(note.description).trim()}</div>
   const _PRINT_CSS = `
     @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap');
     *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: #fff; }
+    html, body { margin: 0; padding: 0; background: #fff; direction: rtl; text-align: right; }
 
     /* margin:0 removes the browser's URL/date/page-number headers and footers */
     @page { size: A4 portrait; margin: 0; }
