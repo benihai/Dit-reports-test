@@ -153,6 +153,12 @@ const ProjectsView = (() => {
           </div>
         </div>
 
+        <div style="margin-top:16px;">
+          <div style="font-weight:700;font-size:.9rem;margin-bottom:8px;">אנשי קשר</div>
+          <div id="ep-contacts-list"></div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="ProjectsView._addEpContact()">+ הוסף איש קשר</button>
+        </div>
+
         <div class="form-actions">
           <button class="btn btn-outline" onclick="document.getElementById('edit-project-overlay').classList.add('hidden')">ביטול</button>
           <button class="btn btn-primary" onclick="ProjectsView._saveEdit('${id}')">שמור</button>
@@ -161,11 +167,67 @@ const ProjectsView = (() => {
     `;
     overlay.classList.remove('hidden');
     overlay.onclick = e => { if (e.target === overlay) overlay.classList.add('hidden'); };
-    setTimeout(() => document.getElementById('ep-name')?.focus(), 60);
+    setTimeout(() => {
+      document.getElementById('ep-name')?.focus();
+      _pendingContacts = null;
+      _renderEpContacts(project.contacts || []);
+    }, 0);
+  }
+
+  let _epContacts = [];
+
+  function _renderEpContacts(list) {
+    if (list !== undefined) _epContacts = list.slice();
+    const container = document.getElementById('ep-contacts-list');
+    if (!container) return;
+    container.innerHTML = _epContacts.map((c, i) => `
+      <div class="contact-row" data-row="${i}">
+        <button type="button" class="contact-row-del" onclick="ProjectsView._removeEpContact(${i})">✕</button>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">שם <span class="required">*</span></label>
+          <input type="text" data-ep="${i}-name" value="${escHtml(c.name)}" placeholder="שם מלא">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">מייל <span class="required">*</span></label>
+          <input type="email" data-ep="${i}-email" value="${escHtml(c.email)}" placeholder="example@mail.com">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">תפקיד</label>
+          <input type="text" data-ep="${i}-role" value="${escHtml(c.role || '')}" placeholder="תפקיד (רשות)">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">טלפון</label>
+          <input type="tel" data-ep="${i}-phone" value="${escHtml(c.phone || '')}" placeholder="050-0000000 (רשות)">
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function _gatherEpContacts() {
+    const items = document.querySelectorAll('#ep-contacts-list .contact-row');
+    return Array.from(items).map((row, i) => ({
+      name:  row.querySelector(`[data-ep="${i}-name"]`)?.value.trim()  || '',
+      email: row.querySelector(`[data-ep="${i}-email"]`)?.value.trim() || '',
+      role:  row.querySelector(`[data-ep="${i}-role"]`)?.value.trim()  || '',
+      phone: row.querySelector(`[data-ep="${i}-phone"]`)?.value.trim() || '',
+    })).filter(c => c.name && c.email);
+  }
+
+  function _addEpContact() {
+    _epContacts = _gatherEpContacts();
+    _epContacts.push({ name: '', email: '', role: '', phone: '' });
+    _renderEpContacts();
+  }
+
+  function _removeEpContact(idx) {
+    _epContacts = _gatherEpContacts();
+    _epContacts.splice(idx, 1);
+    _renderEpContacts();
   }
 
   // Called from inline onchange — store logo in a module-level temp var
-  let _pendingLogo = null;
+  let _pendingLogo     = null;
+  let _pendingContacts = null;
 
   function _onEditLogo(e, projectId) {
     const file = e.target.files[0];
@@ -215,6 +277,7 @@ const ProjectsView = (() => {
     project.clientName = client || '';
     project.domain     = domain || '';
     if (_pendingLogo !== null) project.logoData = _pendingLogo;
+    project.contacts   = _gatherEpContacts();
 
     App.showLoading('שומר...');
     try {
@@ -244,5 +307,5 @@ const ProjectsView = (() => {
     });
   }
 
-  return { render, editProject, _onEditLogo, _clearEditLogo, _searchLogoByDomain, _saveEdit, deleteProject };
+  return { render, editProject, _onEditLogo, _clearEditLogo, _searchLogoByDomain, _saveEdit, deleteProject, _addEpContact, _removeEpContact };
 })();

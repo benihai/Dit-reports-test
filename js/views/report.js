@@ -40,6 +40,7 @@ const ReportView = (() => {
         </svg>
         PDF
       </button>
+      <button class="btn btn-outline btn-sm" onclick="ReportView.shareEmail()">📧 שתף במייל</button>
     `);
 
     const container = document.getElementById('view-container');
@@ -317,6 +318,14 @@ const ReportView = (() => {
     await PdfExport.preview(report, notes, project);
   }
 
+  // ── EMAIL SHARE ──────────────────────────────────────────────────────────────
+  async function shareEmail() {
+    const report  = await Storage.Reports.get(_reportId);
+    const notes   = await Storage.Notes.getForReport(_reportId);
+    const project = await Storage.Projects.get(report.projectId);
+    EmailShare.open(report, notes, project);
+  }
+
   // ── FAB ──────────────────────────────────────────────────────────────────────
   function attachFab(reportId) {
     if (_fab) _fab.remove();
@@ -339,6 +348,6 @@ const ReportView = (() => {
     render, cleanup,
     toggleEditHeader, cancelEditHeader, saveHeader,
     editNote, deleteNote,
-    openLightbox, exportPdf,
+    openLightbox, exportPdf, shareEmail,
   };
 })();

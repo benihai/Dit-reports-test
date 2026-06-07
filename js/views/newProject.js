@@ -3,6 +3,7 @@ const NewProjectView = (() => {
   let _personId      = null;
   let _searching     = false;
   let _debounceTimer = null;
+  let _contacts      = [];
 
   function escHtml(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -12,6 +13,7 @@ const NewProjectView = (() => {
     _personId  = personId;
     _logoData  = null;
     _searching = false;
+    _contacts  = [];
 
     const person = await Storage.People.get(personId);
     if (!person) { Router.navigate('/'); return; }
@@ -85,6 +87,12 @@ const NewProjectView = (() => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">אנשי קשר</div>
+          <div id="contacts-list"></div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="NewProjectView.addContact()">+ הוסף איש קשר</button>
         </div>
 
         <div class="form-actions">
@@ -193,6 +201,54 @@ const NewProjectView = (() => {
     document.getElementById('logo-upload-text').textContent = 'לחץ לבחירת תמונה';
   }
 
+  function _gatherContacts() {
+    const items = document.querySelectorAll('.contact-row');
+    return Array.from(items).map((row, i) => ({
+      name:  row.querySelector(`[data-ci="${i}-name"]`)?.value.trim()  || '',
+      email: row.querySelector(`[data-ci="${i}-email"]`)?.value.trim() || '',
+      role:  row.querySelector(`[data-ci="${i}-role"]`)?.value.trim()  || '',
+      phone: row.querySelector(`[data-ci="${i}-phone"]`)?.value.trim() || '',
+    })).filter(c => c.name && c.email);
+  }
+
+  function _renderContacts() {
+    const list = document.getElementById('contacts-list');
+    if (!list) return;
+    list.innerHTML = _contacts.map((c, i) => `
+      <div class="contact-row" data-row="${i}">
+        <button type="button" class="contact-row-del" onclick="NewProjectView.removeContact(${i})">✕</button>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">שם <span class="required">*</span></label>
+          <input type="text" data-ci="${i}-name" value="${escHtml(c.name)}" placeholder="שם מלא">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">מייל <span class="required">*</span></label>
+          <input type="email" data-ci="${i}-email" value="${escHtml(c.email)}" placeholder="example@mail.com">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">תפקיד</label>
+          <input type="text" data-ci="${i}-role" value="${escHtml(c.role)}" placeholder="תפקיד (רשות)">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label style="font-size:.8rem;">טלפון</label>
+          <input type="tel" data-ci="${i}-phone" value="${escHtml(c.phone)}" placeholder="050-0000000 (רשות)">
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function addContact() {
+    _contacts = _gatherContacts();
+    _contacts.push({ name: '', email: '', role: '', phone: '' });
+    _renderContacts();
+  }
+
+  function removeContact(idx) {
+    _contacts = _gatherContacts();
+    _contacts.splice(idx, 1);
+    _renderContacts();
+  }
+
   async function submit(e) {
     e.preventDefault();
     const name       = document.getElementById('proj-name').value.trim();
@@ -201,6 +257,8 @@ const NewProjectView = (() => {
     if (!name)       { App.toast('נא להזין שם פרויקט'); return; }
     if (!clientName) { App.toast('נא להזין שם חברת פיקוח'); return; }
 
+    _contacts = _gatherContacts();
+
     const project = {
       id: Storage.generateId(),
       personId: _personId,
@@ -208,6 +266,7 @@ const NewProjectView = (() => {
       clientName,
       domain: '',
       logoData: _logoData,
+      contacts: _contacts,
       createdAt: Date.now(),
     };
     App.showLoading('יוצר פרויקט...');
@@ -222,5 +281,5 @@ const NewProjectView = (() => {
     }
   }
 
-  return { render, onClientInput, onDomainInput, searchLogo, handleLogoUpload, clearLogo, submit };
+  return { render, onClientInput, onDomainInput, searchLogo, handleLogoUpload, clearLogo, submit, addContact, removeContact };
 })();

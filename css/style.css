@@ -1366,3 +1366,27 @@ input[type="password"]:focus {
 .mb-4 { margin-bottom: 16px; }
 .mt-4 { margin-top: 16px; }
 .w-full { width: 100%; }
+
+/* ── Contact rows ───────────────────────────────────────────────────────────── */
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.contact-row-del {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px;
+  line-height: 1;
+}

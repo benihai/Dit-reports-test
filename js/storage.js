@@ -57,6 +57,7 @@ const Storage = (() => {
       domain: r.domain || '',
       logoData: r.logo_url || '',   // logo_url stores base64 or URL
       createdAt: r.created_at,
+      contacts: r.contacts || [],
     };
   }
   function projectToRow(p) {
@@ -68,6 +69,7 @@ const Storage = (() => {
       logo_url: p.logoData || null,
       created_at: p.createdAt,
       created_by: Auth.getUser()?.id,
+      contacts: p.contacts || [],
     };
     // client_name requires migration 001 — include only if column exists in schema
     if (p.clientName !== undefined) row.client_name = p.clientName || null;
